@@ -1,1 +1,20 @@
-<p>login works!</p>
+<div id="container">
+    <div class="center" style="position: relative;">
+        <div id="loginform">
+            <div id="title">
+                <h1>hellohuman!</h1>
+                <p>interact with human race all over the world.</p>
+            </div>
+            <div class="center">
+                <form [formGroup]="loginForm" (ngSubmit)="goLogin()">
+                    <input type="text" placeholder="Name" formControlName="Name">
+                    <select formControlName="Gender">
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+                    <button type="submit" [disabled]="loginForm.invalid">OK</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

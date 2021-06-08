@@ -1,0 +1,32 @@
+#container{
+    position:absolute;
+    height:100%;
+    width:100%;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+}
+
+#title p, #title h1{
+    margin:2px;
+}
+
+#title p{
+    margin-bottom: 25px;
+}
+
+#title {
+    width:100%;
+    text-align: center;
+}
+
+#loginform {
+    margin-top:30vh;
+}
+
+#loginform input, #loginform select, #loginform button{
+    display: block;
+    margin-top: 5px;
+}
