@@ -6,7 +6,7 @@ import { staticvar } from '../static/type';
 import * as fromRoomAction from '../redux/actions/room-action'
 import { ICEResponse, OfferAnswerResponse, RoomResponse } from '../models/response';
 import { Actions } from "@ngrx/effects";
-import { WSPayload } from "src/app/models/payload";
+import { JoinedRoomPayload, WSPayload } from "src/app/models/payload";
 
 @Injectable({
   providedIn: 'root'
@@ -15,11 +15,11 @@ export class RoomService {
 
   constructor(private store:Store<AppState>, private action$:Actions) { }
 
-    joinedRoomEvent:EventEmitter<string> = new EventEmitter<string>()
+    joinedRoomEvent:EventEmitter<JoinedRoomPayload> = new EventEmitter<JoinedRoomPayload>()
     createdRoomEvent:EventEmitter<string> = new EventEmitter<string>()
-    offerFromServerEvent:EventEmitter<any> = new EventEmitter<any>()
     answerFromServerEvent:EventEmitter<any> = new EventEmitter<any>()
     ICEFromServerEvent:EventEmitter<any> = new EventEmitter<any>()
+    RoomID:string
 
     ws:WebSocket
 
@@ -31,10 +31,6 @@ export class RoomService {
         return this.createdRoomEvent
     }
 
-    getOfferFromServerEvent(){
-        return this.offerFromServerEvent
-    }
-
     getAnswerFromServerEvent(){
         return this.answerFromServerEvent
     }
@@ -43,7 +39,7 @@ export class RoomService {
         return this.ICEFromServerEvent
     }
 
-    initWS = (payload:{ID:string,Name:string,Gender:string}) => {
+    initWS = (ID:string,Name:string,Gender:string) => {
         try {
 
             this.ws = new WebSocket(`${api.ws}`)
@@ -52,7 +48,7 @@ export class RoomService {
               //Implement initFromClient
               let tobesent:WSPayload = {
                 Type:staticvar.InitFromClient,
-                User:payload,
+                User:{ID:ID,Name:Name,Gender:Gender,RoomID:null},
                 SDP:null,
                 ICE:null,
               }
@@ -67,18 +63,18 @@ export class RoomService {
                 let sdpRes:OfferAnswerResponse = data
                 switch (data.Type){
                     case staticvar.CreatedRoomFromServer:
+                        this.RoomID = roomRes.RoomID
                         this.createdRoomEvent.emit(roomRes.RoomID)
                         this.store.dispatch(new fromRoomAction.ReceiveRoomID(roomRes.RoomID))
                         break
                     case staticvar.JoinedRoomFromServer:
-                        this.joinedRoomEvent.emit(roomRes.RoomID)
+                        this.RoomID = roomRes.RoomID
+                        let tobeemit:JoinedRoomPayload = {RoomID:roomRes.RoomID,Offer:roomRes.SDP}
+                        this.joinedRoomEvent.emit(tobeemit)
                         this.store.dispatch(new fromRoomAction.ReceiveRoomID(roomRes.RoomID))
                         break
                     case staticvar.ICEFromServer:
                         this.ICEFromServerEvent.emit(iceRes.ICE)
-                        break
-                    case staticvar.OfferFromServer:
-                        this.offerFromServerEvent.emit(sdpRes.SDP)
                         break
                     case staticvar.AnswerFromServer:
                         this.answerFromServerEvent.emit(sdpRes.SDP)
@@ -93,20 +89,20 @@ export class RoomService {
     }
 
 
-    sendSDP = (SDP:any,Type:string,User:{ID:string,Name:string,Gender:string}) => {
+    sendSDP = (SDP:any,Type:string,ID:string,Name:string,Gender:string) => {
         let payload:WSPayload = {
             Type:Type,
-            User:User,
+            User:{ID:ID,Name:Name,Gender:Gender,RoomID:this.RoomID},
             SDP:SDP,
             ICE:null
         }
         this.ws.send(JSON.stringify(payload))
     }
 
-    sendICE = (ICE:any,User:{ID:string,Name:string,Gender:string}) => {
+    sendICE = (ICE:any,ID:string,Name:string,Gender:string) => {
       let payload:WSPayload = {
           Type:staticvar.ICEFromClient,
-          User:User,
+          User:{ID:ID,Name:Name,Gender:Gender,RoomID:this.RoomID},
           SDP:null,
           ICE:ICE,
       }

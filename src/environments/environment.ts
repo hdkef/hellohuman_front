@@ -3,6 +3,7 @@
 // The list of file replacements can be found in `angular.json`.
 const host = "http://localhost:4040"
 const hostws = "ws://localhost:4040"
+export const stunserver = "stun:stun4.l.google.com:19302"
 
 export const environment = {
   production: false

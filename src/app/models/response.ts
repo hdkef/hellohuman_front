@@ -5,6 +5,7 @@ export interface LoginResponse {
 export interface RoomResponse {
     Type:string,
     RoomID:string,
+	SDP:any,
 }
 
 export interface ICEResponse  {

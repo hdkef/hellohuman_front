@@ -1,9 +1,12 @@
 import { Component, EventEmitter, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
+import { JoinedRoomPayload } from 'src/app/models/payload';
 import { LoginResponse } from 'src/app/models/response';
 import { AppState } from 'src/app/redux/reducers/app-reducer';
 import { RoomService } from 'src/app/services/room.service';
+import { staticvar } from 'src/app/static/type';
+import { stunserver } from 'src/environments/environment';
 
 @Component({
   selector: 'app-room',
@@ -16,12 +19,13 @@ export class RoomComponent implements OnInit, OnDestroy {
   userInfo:LoginResponse
   authSubs:Subscription
   localVideo:HTMLVideoElement
+  localStream:MediaStream
   remoteVideo:HTMLVideoElement
   joinedRoomEvent:Subscription
   createdRoomEvent:Subscription
-  offerFromServerEvent:Subscription
   answerFromServerEvent:Subscription
   ICEFromServerEvent:Subscription
+  PeerRef:webkitRTCPeerConnection
 
   constructor(private store:Store<AppState>, private roomService:RoomService) { }
   
@@ -38,9 +42,6 @@ export class RoomComponent implements OnInit, OnDestroy {
     })
     this.createdRoomEvent = this.roomService.getCreatedRoomEvent().subscribe((event)=>{
       this.handleCreatedRoom(event)
-    })
-    this.offerFromServerEvent = this.roomService.getOfferFromServerEvent().subscribe((event)=>{
-      this.handleOffer(event)
     })
     this.answerFromServerEvent = this.roomService.getAnswerFromServerEvent().subscribe((event)=>{
       this.handleAnswer(event)
@@ -73,20 +74,27 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   goLive(){
-    this.startWebCam()
-    this.roomService.initWS({ID:this.userInfo.User.ID,Name:this.userInfo.User.Name,Gender:this.userInfo.User.Gender})
+    console.log("goLive")
+    this.startWebCamAndInitWS()
+  }
+
+  initWS = async ()=>{
+    this.roomService.initWS(this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
   }
 
   goStop(){
     //implements stop streaming and destroy websocket
   }
 
-  startWebCam = async () => {
-    console.log(this.localVideo)
+  startWebCamAndInitWS = async () => {
+    console.log("startWebCam")
     try {
       navigator.mediaDevices.getUserMedia({video:true,audio:true}).then((stream)=>{
+        console.log("stream",stream)
         this.localVideo.srcObject = stream
+        this.localStream = stream
         this.localVideo.muted = true
+        this.roomService.initWS(this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
       }).catch((err)=>{
         console.log(err)
       })
@@ -95,24 +103,85 @@ export class RoomComponent implements OnInit, OnDestroy {
     }
   }
 
+  createPeer = ()=>{
+    console.log("createPeer")
+    const peer = new RTCPeerConnection({
+      iceServers:[{urls:`${stunserver}`}]
+    })
+    return peer
+  }
+
+  createOffer = ()=>{
+    console.log("createOffer")
+    return this.PeerRef.createOffer().then((offer)=>{
+      return this.PeerRef.setLocalDescription(offer)
+    }).then(()=>{
+      this.roomService.sendSDP(this.PeerRef.localDescription,staticvar.OfferFromClient,this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
+    })
+  }
+
+  sendICE = (event)=>{
+    console.log("sendICE")
+    let ice = event.candidate
+    if (ice){
+      this.roomService.sendICE(ice,this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
+    }
+  }
+
+  handlePeerTrack = (event:RTCTrackEvent)=>{
+    console.log("handlePeerTrack")
+    this.remoteVideo.srcObject = event.streams[0]
+  }
+
   handleCreatedRoom = (RoomID:string)=>{
+    console.log("handleCreatedRoom")
+    //Implements creating offer and send it to signallingServer
+    this.PeerRef = this.createPeer()
+    this.PeerRef.onnegotiationneeded = this.createOffer
+    this.PeerRef.onicecandidate = this.sendICE
+    console.log("localStream",this.localStream)
+    this.localStream.getTracks().forEach((track)=>{
+      this.PeerRef.addTrack(track,this.localStream)
+    })
+    //when track is retrieved from other peer, feed that to video srcObject
+    this.PeerRef.ontrack = this.handlePeerTrack
 
+    console.log("Created a room. Sending an offer. Waiting an answer.")
   }
 
-  handleJoinedRoom = (RoomID:string)=>{
+  handleJoinedRoom = (payload:JoinedRoomPayload)=>{
+    console.log("handleJoinedRoom")
+    this.PeerRef = this.createPeer()
+    this.PeerRef.onicecandidate = this.sendICE
+    this.localStream.getTracks().forEach((track)=>{
+      this.PeerRef.addTrack(track,this.localStream)
+    })
+    //when track is retrieved from other peer, feed that to video srcObject
+    this.PeerRef.ontrack = this.handlePeerTrack
 
-  }
-
-  handleOffer = (Offer:any)=>{
-
+    //Implements setRemoteDescription(offer) and send answer to signalling server
+    return this.PeerRef.setRemoteDescription(new RTCSessionDescription(payload.Offer)).then(()=>{
+      return this.PeerRef.createAnswer()
+    }).then((answer)=>{
+      console.log("answer created ", answer)
+      this.roomService.sendSDP(answer,staticvar.AnswerFromClient,this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
+      return this.PeerRef.setLocalDescription(answer)
+    })
   }
 
   handleAnswer = (Answer:any)=>{
-
+    console.log("handleAnswer")
+    console.log("Answer", Answer)
+    //Implements setRemoteDescription(answer)
+    return this.PeerRef.setRemoteDescription(new RTCSessionDescription(Answer))
   }
 
   handleICE = (ICE:any)=>{
-
+    console.log("handleICE")
+    //Implements adding ICE candidate to peerConn
+    // if (this.PeerRef.localDescription){
+      this.PeerRef.addIceCandidate(new RTCIceCandidate(ICE))
+    // }
   }
 
 }
