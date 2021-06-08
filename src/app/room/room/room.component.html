@@ -1,1 +1,29 @@
-<p>room works!</p>
+<!-- {{(user | async)?.User.ID}}
+{{(user | async)?.User.Name}}
+{{(user | async)?.User.Gender}} -->
+
+<div id="container">
+    <div id="title">
+        <h1>hellohuman!</h1>
+        <p>interact with human race all over the world.</p>
+    </div>
+    <div class="center">
+        <div id="videogrid">    
+            <div class="videocol">
+                <video autoplay id="localvideo"></video>
+            </div>
+            <div class="videocol">
+                <video autoplay id="remotevideo"></video>
+            </div>
+        </div>
+    </div>
+    <div class="center">
+        <app-chat-box></app-chat-box>
+    </div>
+    <div class="center">
+        <div id="btn-group" class="center">
+            <button (click)="goLive()">start</button>
+            <button (click)="goStop()">stop</button>
+        </div>
+    </div>
+</div>

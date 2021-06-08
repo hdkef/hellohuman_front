@@ -1,0 +1,44 @@
+
+#title p, #title h1{
+    margin:2px;
+}
+
+#title p{
+    margin-bottom: 5px;
+}
+
+#title {
+    width:100%;
+    text-align: center;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+}
+
+#videogrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+#btn-group button {
+    background-color: wheat;
+    display: block;
+    width: 64px;
+    height: 32px;
+    font-size: large;
+    border: none;
+    margin:0 5px 0 5px;
+    border-radius: 25%;
+    cursor: pointer;
+}
+
+.videocol {
+    margin:0 25px 0 25px;
+}
+
+.videocol video {
+    width:400px;
+    height: 400px;
+}

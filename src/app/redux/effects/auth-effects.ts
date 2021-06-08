@@ -6,10 +6,11 @@ import { api } from "src/environments/environment";
 import { of } from "rxjs";
 import { catchError, map, switchMap } from 'rxjs/operators'
 import * as fromResponse from '../../models/response'
+import { Router } from "@angular/router";
 
 @Injectable()
 export class AuthEffect {
-    constructor(private action$:Actions, private http:HttpClient){}
+    constructor(private action$:Actions, private http:HttpClient, private router:Router){}
 
     loginStart = createEffect(()=>{
         return this.action$.pipe(
@@ -18,6 +19,7 @@ export class AuthEffect {
                 let payload = JSON.stringify(action.payload)
                 return this.http.post<fromResponse.LoginResponse>(`${api.login}`,payload).pipe(
                     map((data)=>{
+                        this.router.navigateByUrl("/room")
                         return new fromAuthAction.LoginOK(data)
                     }),
                     catchError((err)=>{
