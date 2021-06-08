@@ -11,6 +11,7 @@
         <div id="videogrid">    
             <div class="videocol">
                 <video autoplay id="localvideo"></video>
+                <h2>{{(userAsync | async)?.User.Name}} (you)</h2>
             </div>
             <div class="videocol">
                 <video autoplay id="remotevideo"></video>

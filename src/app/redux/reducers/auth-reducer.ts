@@ -2,7 +2,6 @@ import * as fromAuthAction from '../actions/auth-action'
 
 export interface State {
     ID:string,
-    RoomID:string,
     Name:string,
     Gender:string,
     Info:string,
@@ -10,7 +9,6 @@ export interface State {
 
 const initialState:State = {
     ID:"",
-    RoomID:"",
     Name:"",
     Gender:"",
     Info:"",
