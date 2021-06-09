@@ -6,8 +6,9 @@ import { AppComponent } from './app.component';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import {AppReducer} from './redux/reducers/app-reducer'
-import { AuthEffect } from './redux/effects/auth-effects';
+import { AuthEffect } from './redux/effects/auth-effect';
 import { HttpClientModule } from '@angular/common/http';
+import { RoomEffect } from './redux/effects/room-effect';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,7 @@ import { HttpClientModule } from '@angular/common/http';
     BrowserModule,
     AppRoutingModule,
     StoreModule.forRoot(AppReducer),
-    EffectsModule.forRoot([AuthEffect])
+    EffectsModule.forRoot([AuthEffect,RoomEffect])
   ],
   providers: [],
   bootstrap: [AppComponent]

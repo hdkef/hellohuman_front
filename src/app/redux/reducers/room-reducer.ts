@@ -8,6 +8,7 @@ export interface State {
     Answer:any,
     Info:string,
     ChatBox:Chat[],
+    Peer:{ID:string,Name:string,Gender:string},
 }
 
 const initialState:State = {
@@ -17,6 +18,7 @@ const initialState:State = {
     Answer:null,
     Info:"",
     ChatBox:null,
+    Peer:null,
 }
 
 export function roomReducer (
@@ -24,7 +26,15 @@ export function roomReducer (
     action
 ){
     let oldChatBox = state.ChatBox
-    switch (action.payload){
+    switch (action.type){
+        case fromRoomAction.RESET_ROOM:
+            return initialState
+        case fromRoomAction.RECEIVE_PEER_INFO_AND_ROOM_ID:
+            return {...state,RoomID:action.payload.RoomID,Peer:action.payload.Peer}
+        case fromRoomAction.RECEIVE_PEER_INFO:
+            return {...state,Peer:action.payload}
+        case fromRoomAction.SEND_INFO:
+            return {...state,Info:action.payload}
         case fromRoomAction.INSERT_PEER_CHAT:
             if (!oldChatBox){
                 let newChatBox = [action.payload]

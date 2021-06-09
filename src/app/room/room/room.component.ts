@@ -1,11 +1,12 @@
-import { Component, EventEmitter, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 import { AnswerResponse, LoginResponse, RoomResponse } from 'src/app/models/response';
+import { RoomEffect } from 'src/app/redux/effects/room-effect';
 import { AppState } from 'src/app/redux/reducers/app-reducer';
-import { RoomService } from 'src/app/services/room.service';
 import { staticvar } from 'src/app/static/type';
 import { stunserver } from 'src/environments/environment';
+import * as fromRoomAction from '../../redux/actions/room-action'
 
 @Component({
   selector: 'app-room',
@@ -19,7 +20,6 @@ export class RoomComponent implements OnInit, OnDestroy {
   userAsync:Promise<LoginResponse>
   peerAsync:Promise<LoginResponse>
   userInfo:LoginResponse
-  peerInfo:LoginResponse
   authSubs:Subscription
   localVideo:HTMLVideoElement
   localStream:MediaStream
@@ -33,7 +33,7 @@ export class RoomComponent implements OnInit, OnDestroy {
   statusNotStarted:boolean = true
   canChat:boolean = false
 
-  constructor(private store:Store<AppState>, private roomService:RoomService) { }
+  constructor(private store:Store<AppState>, private roomService:RoomEffect) { }
   
   
   ngOnDestroy(): void {
@@ -43,11 +43,12 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.store.dispatch(new fromRoomAction.ReceiveRoomID('BACOT'))
     this.joinedRoomEvent = this.roomService.getJoinedRoomEvent().subscribe((event)=>{
       this.handleJoinedRoom(event)
     })
     this.createdRoomEvent = this.roomService.getCreatedRoomEvent().subscribe((event)=>{
-      this.handleCreatedRoom(event)
+      this.handleCreatedRoom()
     })
     this.answerFromServerEvent = this.roomService.getAnswerFromServerEvent().subscribe((event)=>{
       this.handleAnswer(event)
@@ -83,33 +84,26 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   goLive(){
-    console.log("goLive")
     this.startWebCamAndInitWS()
     this.statusNotStarted = false
-  }
-
-  initWS = async ()=>{
-    this.roomService.initWS(this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
   }
 
   goStop(){
     //implements stop streaming and destroy websocket
     this.PeerRef.close()
     this.PeerRef = null
-    this.roomService.stopWS()
+    this.store.dispatch(new fromRoomAction.StopWS())
     this.resetPeerInfo("stopped")
     this.statusNotStarted = true
   }
 
   startWebCamAndInitWS = async () => {
-    console.log("startWebCam")
     try {
       navigator.mediaDevices.getUserMedia({video:true,audio:true}).then((stream)=>{
-        console.log("stream",stream)
         this.localVideo.srcObject = stream
         this.localStream = stream
         this.localVideo.muted = true
-        this.roomService.initWS(this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
+        this.store.dispatch(new fromRoomAction.InitWS())
       }).catch((err)=>{
         console.log(err)
       })
@@ -119,7 +113,6 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   createPeer = ()=>{
-    console.log("createPeer")
     const peer = new RTCPeerConnection({
       iceServers:[{urls:`${stunserver}`}]
     })
@@ -127,58 +120,47 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   createOffer = ()=>{
-    console.log("createOffer")
     return this.PeerRef.createOffer().then((offer)=>{
       return this.PeerRef.setLocalDescription(offer)
     }).then(()=>{
-      this.roomService.sendSDP(
-        this.PeerRef.localDescription,
-        staticvar.OfferFromClient,
-        {ID:this.userInfo.User.ID,Name:this.userInfo.User.Name,Gender:this.userInfo.User.Gender}
-        )
+
+      this.store.dispatch(new fromRoomAction.SendSDP(
+        {SDP:this.PeerRef.localDescription,
+        Type:staticvar.OfferFromClient,
+      }
+      ))
     })
   }
 
   sendICE = (event)=>{
-    console.log("sendICE")
     let ice = event.candidate
     if (ice){
-      this.roomService.sendICE(
-        ice,
-        {ID:this.userInfo.User.ID,Name:this.userInfo.User.Name,Gender:this.userInfo.User.Gender}
-        )
+      this.store.dispatch(new fromRoomAction.SendICE({ICE:ice}))
     }
   }
 
   handlePeerTrack = (event:RTCTrackEvent)=>{
-    console.log("handlePeerTrack")
     this.remoteVideo.srcObject = event.streams[0]
   }
 
-  handleCreatedRoom = (RoomID:string)=>{
-    console.log("handleCreatedRoom")
+  handleCreatedRoom = ()=>{
     //Implements creating offer and send it to signallingServer
     this.PeerRef = this.createPeer()
     this.PeerRef.onnegotiationneeded = this.createOffer
     this.PeerRef.onicecandidate = this.sendICE
-    console.log("localStream",this.localStream)
     this.localStream.getTracks().forEach((track)=>{
       this.PeerRef.addTrack(track,this.localStream)
     })
     //when track is retrieved from other peer, feed that to video srcObject
     this.PeerRef.ontrack = this.handlePeerTrack
 
-    console.log("Created a room. Sending an offer. Waiting an answer.")
   }
 
   handleJoinedRoom = (payload:RoomResponse)=>{
-    console.log("handleJoinedRoom")
-    console.log("offer", payload)
     this.peerAsync = new Promise((resolve,_)=>{
       let peer:LoginResponse = {
         User:{ID:payload.Peer.ID,Name:payload.Peer.Name,Gender:payload.Peer.Gender}
       }
-      this.peerInfo = peer
       this.canChat = true
       resolve(peer)
     })
@@ -194,24 +176,19 @@ export class RoomComponent implements OnInit, OnDestroy {
     return this.PeerRef.setRemoteDescription(new RTCSessionDescription(payload.SDP)).then(()=>{
       return this.PeerRef.createAnswer()
     }).then((answer)=>{
-      console.log("answer created ", answer)
-      this.roomService.sendSDP(
-        answer,
-        staticvar.AnswerFromClient,
-        {ID:this.userInfo.User.ID,Name:this.userInfo.User.Name,Gender:this.userInfo.User.Gender}
-        )
+
+      this.store.dispatch(new fromRoomAction.SendSDP(
+        {SDP:answer,Type:staticvar.AnswerFromClient}
+      ))
       return this.PeerRef.setLocalDescription(answer)
     })
   }
 
   handleAnswer = (payload:AnswerResponse)=>{
-    console.log("handleAnswer")
-    console.log("Answer", payload)
     this.peerAsync = new Promise((resolve,_)=>{
       let peer:LoginResponse = {
         User:{ID:payload.Peer.ID,Name:payload.Peer.Name,Gender:payload.Peer.Gender}
       }
-      this.peerInfo = peer
       this.canChat = true
       resolve(peer)
     })
@@ -220,7 +197,6 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   handleICE = (ICE:any)=>{
-    console.log("handleICE")
     //Implements adding ICE candidate to peerConn
     // if (this.PeerRef.localDescription){
       this.PeerRef.addIceCandidate(new RTCIceCandidate(ICE))
@@ -240,10 +216,10 @@ export class RoomComponent implements OnInit, OnDestroy {
       let peer:LoginResponse = {
         User:{ID:"",Name:name,Gender:""}
       }
-      this.peerInfo = peer
       this.canChat = false
       resolve(peer)
     })
+    this.store.dispatch(new fromRoomAction.ResetRoom())
   }
 
 }

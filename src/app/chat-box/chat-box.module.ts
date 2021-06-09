@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BubbleComponent } from './bubble/bubble.component';
 import { InputComponent } from './input/input.component';
 import { ChatBoxComponent } from './chat-box/chat-box.component';
+import { ReactiveFormsModule } from '@angular/forms';
 
 
 
@@ -13,7 +14,8 @@ import { ChatBoxComponent } from './chat-box/chat-box.component';
     ChatBoxComponent
   ],
   imports: [
-    CommonModule
+    CommonModule,
+    ReactiveFormsModule,
   ],
   exports:[
     BubbleComponent,
