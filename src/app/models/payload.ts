@@ -8,8 +8,3 @@ export interface WSPayload {
     SDP:any,
     ICE:any,
 }
-
-export interface JoinedRoomPayload {
-    RoomID:string,
-    Offer:any,
-}

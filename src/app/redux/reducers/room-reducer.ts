@@ -22,6 +22,8 @@ export function roomReducer (
 ){
     let oldICES = state.ICES 
     switch (action.payload){
+        case fromRoomAction.DESTROY_ROOM:
+            return initialState
         case fromRoomAction.RECEIVE_ROOM_ID:
             return {...state,RoomID:action.payload}
         default:

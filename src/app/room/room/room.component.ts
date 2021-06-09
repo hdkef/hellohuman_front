@@ -1,8 +1,7 @@
 import { Component, EventEmitter, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
-import { JoinedRoomPayload } from 'src/app/models/payload';
-import { LoginResponse } from 'src/app/models/response';
+import { AnswerResponse, LoginResponse, RoomResponse } from 'src/app/models/response';
 import { AppState } from 'src/app/redux/reducers/app-reducer';
 import { RoomService } from 'src/app/services/room.service';
 import { staticvar } from 'src/app/static/type';
@@ -13,9 +12,12 @@ import { stunserver } from 'src/environments/environment';
   templateUrl: './room.component.html',
   styleUrls: ['./room.component.css']
 })
+
+
 export class RoomComponent implements OnInit, OnDestroy {
 
   userAsync:Promise<LoginResponse>
+  peerAsync:Promise<LoginResponse>
   userInfo:LoginResponse
   authSubs:Subscription
   localVideo:HTMLVideoElement
@@ -149,8 +151,15 @@ export class RoomComponent implements OnInit, OnDestroy {
     console.log("Created a room. Sending an offer. Waiting an answer.")
   }
 
-  handleJoinedRoom = (payload:JoinedRoomPayload)=>{
+  handleJoinedRoom = (payload:RoomResponse)=>{
     console.log("handleJoinedRoom")
+    console.log("offer", payload)
+    this.peerAsync = new Promise((resolve,_)=>{
+      let peer:LoginResponse = {
+        User:{ID:payload.Peer.ID,Name:payload.Peer.Name,Gender:payload.Peer.Gender}
+      }
+      resolve(peer)
+    })
     this.PeerRef = this.createPeer()
     this.PeerRef.onicecandidate = this.sendICE
     this.localStream.getTracks().forEach((track)=>{
@@ -160,7 +169,7 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.PeerRef.ontrack = this.handlePeerTrack
 
     //Implements setRemoteDescription(offer) and send answer to signalling server
-    return this.PeerRef.setRemoteDescription(new RTCSessionDescription(payload.Offer)).then(()=>{
+    return this.PeerRef.setRemoteDescription(new RTCSessionDescription(payload.SDP)).then(()=>{
       return this.PeerRef.createAnswer()
     }).then((answer)=>{
       console.log("answer created ", answer)
@@ -169,11 +178,17 @@ export class RoomComponent implements OnInit, OnDestroy {
     })
   }
 
-  handleAnswer = (Answer:any)=>{
+  handleAnswer = (payload:AnswerResponse)=>{
     console.log("handleAnswer")
-    console.log("Answer", Answer)
+    console.log("Answer", payload)
+    this.peerAsync = new Promise((resolve,_)=>{
+      let peer:LoginResponse = {
+        User:{ID:payload.Peer.ID,Name:payload.Peer.Name,Gender:payload.Peer.Gender}
+      }
+      resolve(peer)
+    })
     //Implements setRemoteDescription(answer)
-    return this.PeerRef.setRemoteDescription(new RTCSessionDescription(Answer))
+    return this.PeerRef.setRemoteDescription(new RTCSessionDescription(payload.SDP))
   }
 
   handleICE = (ICE:any)=>{

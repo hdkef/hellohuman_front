@@ -4,9 +4,9 @@ import { api } from 'src/environments/environment';
 import { AppState } from '../redux/reducers/app-reducer';
 import { staticvar } from '../static/type';
 import * as fromRoomAction from '../redux/actions/room-action'
-import { ICEResponse, OfferAnswerResponse, RoomResponse } from '../models/response';
+import { ICEResponse, AnswerResponse, RoomResponse } from '../models/response';
 import { Actions } from "@ngrx/effects";
-import { JoinedRoomPayload, WSPayload } from "src/app/models/payload";
+import { WSPayload } from "src/app/models/payload";
 
 @Injectable({
   providedIn: 'root'
@@ -15,9 +15,9 @@ export class RoomService {
 
   constructor(private store:Store<AppState>, private action$:Actions) { }
 
-    joinedRoomEvent:EventEmitter<JoinedRoomPayload> = new EventEmitter<JoinedRoomPayload>()
+    joinedRoomEvent:EventEmitter<RoomResponse> = new EventEmitter<RoomResponse>()
     createdRoomEvent:EventEmitter<string> = new EventEmitter<string>()
-    answerFromServerEvent:EventEmitter<any> = new EventEmitter<any>()
+    answerFromServerEvent:EventEmitter<AnswerResponse> = new EventEmitter<AnswerResponse>()
     ICEFromServerEvent:EventEmitter<any> = new EventEmitter<any>()
     RoomID:string
 
@@ -60,7 +60,7 @@ export class RoomService {
                 let data = JSON.parse(e.data)
                 let roomRes:RoomResponse = data
                 let iceRes:ICEResponse = data
-                let sdpRes:OfferAnswerResponse = data
+                let sdpRes:AnswerResponse = data
                 switch (data.Type){
                     case staticvar.CreatedRoomFromServer:
                         this.RoomID = roomRes.RoomID
@@ -69,15 +69,14 @@ export class RoomService {
                         break
                     case staticvar.JoinedRoomFromServer:
                         this.RoomID = roomRes.RoomID
-                        let tobeemit:JoinedRoomPayload = {RoomID:roomRes.RoomID,Offer:roomRes.SDP}
-                        this.joinedRoomEvent.emit(tobeemit)
+                        this.joinedRoomEvent.emit(roomRes)
                         this.store.dispatch(new fromRoomAction.ReceiveRoomID(roomRes.RoomID))
                         break
                     case staticvar.ICEFromServer:
                         this.ICEFromServerEvent.emit(iceRes.ICE)
                         break
                     case staticvar.AnswerFromServer:
-                        this.answerFromServerEvent.emit(sdpRes.SDP)
+                        this.answerFromServerEvent.emit(sdpRes)
                         break
                 }
             }

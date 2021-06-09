@@ -6,6 +6,7 @@ export interface RoomResponse {
     Type:string,
     RoomID:string,
 	SDP:any,
+	Peer:{ID:string,Name:string,Gender:string},
 }
 
 export interface ICEResponse  {
@@ -13,7 +14,8 @@ export interface ICEResponse  {
 	ICE:any
 }
 
-export interface OfferAnswerResponse  {
+export interface AnswerResponse  {
 	Type:string,
 	SDP:any,
+	Peer:{ID:string,Name:string,Gender:string},
 }
