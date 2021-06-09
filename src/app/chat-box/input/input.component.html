@@ -1,1 +1,3 @@
-<p>input works!</p>
+<form [formGroup]="chatForm" (ngSubmit)="sendChatText()">
+    <input type="text" placeholder="chat here..." formControlName="Text">
+</form>

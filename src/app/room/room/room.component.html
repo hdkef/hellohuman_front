@@ -24,8 +24,8 @@
     </div>
     <div class="center">
         <div id="btn-group" class="center">
-            <button (click)="goLive()">start</button>
-            <button (click)="goStop()">stop</button>
+            <button (click)="goLive()" *ngIf="statusNotStarted">start</button>
+            <button (click)="goStop()" *ngIf="!statusNotStarted">stop</button>
         </div>
     </div>
 </div>

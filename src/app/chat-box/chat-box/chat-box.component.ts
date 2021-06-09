@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output } from '@angular/core';
 
 @Component({
   selector: 'app-chat-box',
@@ -9,7 +9,14 @@ export class ChatBoxComponent implements OnInit {
 
   constructor() { }
 
+  @Output()
+
   ngOnInit(): void {
+
+  }
+
+  onChatTextEvent(Text){
+
   }
 
 }

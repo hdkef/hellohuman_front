@@ -19,3 +19,11 @@ export interface AnswerResponse  {
 	SDP:any,
 	Peer:{ID:string,Name:string,Gender:string},
 }
+
+export interface ChatResponse {
+	Name:string,
+	Gender:string,
+	Type:string,
+	Text:string,
+	Date:string,
+}

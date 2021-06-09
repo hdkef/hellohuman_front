@@ -4,16 +4,16 @@ import { api } from 'src/environments/environment';
 import { AppState } from '../redux/reducers/app-reducer';
 import { staticvar } from '../static/type';
 import * as fromRoomAction from '../redux/actions/room-action'
-import { ICEResponse, AnswerResponse, RoomResponse } from '../models/response';
-import { Actions } from "@ngrx/effects";
+import { ICEResponse, AnswerResponse, RoomResponse, ChatResponse } from '../models/response';
 import { WSPayload } from "src/app/models/payload";
+import { Chat } from "../models/chat";
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoomService {
 
-  constructor(private store:Store<AppState>, private action$:Actions) { }
+  constructor(private store:Store<AppState>) { }
 
     joinedRoomEvent:EventEmitter<RoomResponse> = new EventEmitter<RoomResponse>()
     createdRoomEvent:EventEmitter<string> = new EventEmitter<string>()
@@ -56,6 +56,8 @@ export class RoomService {
                 User:{ID:ID,Name:Name,Gender:Gender,RoomID:null},
                 SDP:null,
                 ICE:null,
+                Text:null,
+                Peer:null,
               }
               this.ws.send(JSON.stringify(tobesent))
             }
@@ -66,6 +68,12 @@ export class RoomService {
                 let roomRes:RoomResponse = data
                 let iceRes:ICEResponse = data
                 let sdpRes:AnswerResponse = data
+                let chatRes:ChatResponse = data
+                let chat:Chat = {
+                    Name:chatRes.Name,
+                    Text:chatRes.Text,
+                    Date:chatRes.Date,
+                }
                 switch (data.Type){
                     case staticvar.CreatedRoomFromServer:
                         this.RoomID = roomRes.RoomID
@@ -88,6 +96,12 @@ export class RoomService {
                         this.ws.close()
                         this.ws = null
                         break
+                    case staticvar.ChatFromMe:
+                        this.store.dispatch(new fromRoomAction.InsertUserChat(chat))
+                        break
+                    case staticvar.ChatFromPeer:
+                        this.store.dispatch(new fromRoomAction.InsertPeerChat(chat))
+                        break
                 }
             }
             return true
@@ -98,22 +112,26 @@ export class RoomService {
     }
 
 
-    sendSDP = (SDP:any,Type:string,ID:string,Name:string,Gender:string) => {
+    sendSDP = (SDP:any,Type:string,User:{ID:string,Name:string,Gender:string}) => {
         let payload:WSPayload = {
             Type:Type,
-            User:{ID:ID,Name:Name,Gender:Gender,RoomID:this.RoomID},
+            User:{ID:User.ID,Name:User.Name,Gender:User.Gender,RoomID:this.RoomID},
             SDP:SDP,
-            ICE:null
+            ICE:null,
+            Text:null,
+            Peer:null,
         }
         this.ws.send(JSON.stringify(payload))
     }
 
-    sendICE = (ICE:any,ID:string,Name:string,Gender:string) => {
+    sendICE = (ICE:any,User:{ID:string,Name:string,Gender:string}) => {
       let payload:WSPayload = {
           Type:staticvar.ICEFromClient,
-          User:{ID:ID,Name:Name,Gender:Gender,RoomID:this.RoomID},
+          User:{ID:User.ID,Name:User.Name,Gender:User.Gender,RoomID:this.RoomID},
           SDP:null,
           ICE:ICE,
+          Text:null,
+          Peer:null,
       }
       this.ws.send(JSON.stringify(payload))
     }
@@ -123,5 +141,15 @@ export class RoomService {
         this.ws = null
     }
 
-  
+    sendChat = (Text,User:{ID,Name,Gender},Peer:{ID,Name,Gender})=>{
+        let payload:WSPayload = {
+            Type:staticvar.ChatFromClient,
+            User:{ID:User.ID,Name:User.Name,Gender:User.Gender,RoomID:this.RoomID},
+            SDP:null,
+            ICE:null,
+            Text:Text,
+            Peer:{ID:Peer.ID,Name:Peer.Name,Gender:Peer.Gender,RoomID:this.RoomID},
+        }
+        this.ws.send(JSON.stringify(payload))
+    }
 }

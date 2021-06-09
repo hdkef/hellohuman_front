@@ -19,6 +19,7 @@ export class RoomComponent implements OnInit, OnDestroy {
   userAsync:Promise<LoginResponse>
   peerAsync:Promise<LoginResponse>
   userInfo:LoginResponse
+  peerInfo:LoginResponse
   authSubs:Subscription
   localVideo:HTMLVideoElement
   localStream:MediaStream
@@ -29,6 +30,8 @@ export class RoomComponent implements OnInit, OnDestroy {
   peerDisconnectedEvent:Subscription
   ICEFromServerEvent:Subscription
   PeerRef:webkitRTCPeerConnection
+  statusNotStarted:boolean = true
+  canChat:boolean = false
 
   constructor(private store:Store<AppState>, private roomService:RoomService) { }
   
@@ -82,6 +85,7 @@ export class RoomComponent implements OnInit, OnDestroy {
   goLive(){
     console.log("goLive")
     this.startWebCamAndInitWS()
+    this.statusNotStarted = false
   }
 
   initWS = async ()=>{
@@ -93,6 +97,8 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.PeerRef.close()
     this.PeerRef = null
     this.roomService.stopWS()
+    this.resetPeerInfo("stopped")
+    this.statusNotStarted = true
   }
 
   startWebCamAndInitWS = async () => {
@@ -125,7 +131,11 @@ export class RoomComponent implements OnInit, OnDestroy {
     return this.PeerRef.createOffer().then((offer)=>{
       return this.PeerRef.setLocalDescription(offer)
     }).then(()=>{
-      this.roomService.sendSDP(this.PeerRef.localDescription,staticvar.OfferFromClient,this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
+      this.roomService.sendSDP(
+        this.PeerRef.localDescription,
+        staticvar.OfferFromClient,
+        {ID:this.userInfo.User.ID,Name:this.userInfo.User.Name,Gender:this.userInfo.User.Gender}
+        )
     })
   }
 
@@ -133,7 +143,10 @@ export class RoomComponent implements OnInit, OnDestroy {
     console.log("sendICE")
     let ice = event.candidate
     if (ice){
-      this.roomService.sendICE(ice,this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
+      this.roomService.sendICE(
+        ice,
+        {ID:this.userInfo.User.ID,Name:this.userInfo.User.Name,Gender:this.userInfo.User.Gender}
+        )
     }
   }
 
@@ -165,6 +178,8 @@ export class RoomComponent implements OnInit, OnDestroy {
       let peer:LoginResponse = {
         User:{ID:payload.Peer.ID,Name:payload.Peer.Name,Gender:payload.Peer.Gender}
       }
+      this.peerInfo = peer
+      this.canChat = true
       resolve(peer)
     })
     this.PeerRef = this.createPeer()
@@ -180,7 +195,11 @@ export class RoomComponent implements OnInit, OnDestroy {
       return this.PeerRef.createAnswer()
     }).then((answer)=>{
       console.log("answer created ", answer)
-      this.roomService.sendSDP(answer,staticvar.AnswerFromClient,this.userInfo.User.ID,this.userInfo.User.Name,this.userInfo.User.Gender)
+      this.roomService.sendSDP(
+        answer,
+        staticvar.AnswerFromClient,
+        {ID:this.userInfo.User.ID,Name:this.userInfo.User.Name,Gender:this.userInfo.User.Gender}
+        )
       return this.PeerRef.setLocalDescription(answer)
     })
   }
@@ -192,6 +211,8 @@ export class RoomComponent implements OnInit, OnDestroy {
       let peer:LoginResponse = {
         User:{ID:payload.Peer.ID,Name:payload.Peer.Name,Gender:payload.Peer.Gender}
       }
+      this.peerInfo = peer
+      this.canChat = true
       resolve(peer)
     })
     //Implements setRemoteDescription(answer)
@@ -207,15 +228,22 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   handlePeerDisconnect = ()=>{
+    this.statusNotStarted = true
     this.PeerRef.close()
     this.PeerRef = null
-      this.peerAsync = new Promise((resolve,_)=>{
-        let peer:LoginResponse = {
-          User:{ID:"",Name:"peer disconnected",Gender:""}
-        }
-        resolve(peer)
-      })
+    this.resetPeerInfo("peer disconnected")
       console.log("peer disconnected")
+  }
+
+  resetPeerInfo = (name)=>{
+    this.peerAsync = new Promise((resolve,_)=>{
+      let peer:LoginResponse = {
+        User:{ID:"",Name:name,Gender:""}
+      }
+      this.peerInfo = peer
+      this.canChat = false
+      resolve(peer)
+    })
   }
 
 }
