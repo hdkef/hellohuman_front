@@ -26,6 +26,7 @@ export class RoomComponent implements OnInit, OnDestroy {
   joinedRoomEvent:Subscription
   createdRoomEvent:Subscription
   answerFromServerEvent:Subscription
+  peerDisconnectedEvent:Subscription
   ICEFromServerEvent:Subscription
   PeerRef:webkitRTCPeerConnection
 
@@ -50,6 +51,9 @@ export class RoomComponent implements OnInit, OnDestroy {
     })
     this.ICEFromServerEvent = this.roomService.getICEFromServerEvent().subscribe((event)=>{
       this.handleICE(event)
+    })
+    this.peerDisconnectedEvent = this.roomService.getPeerDisconnectedEvent().subscribe((event)=>{
+      this.handlePeerDisconnect()
     })
     this.subscribeAuth()
     this.getVideosElement()
@@ -86,6 +90,9 @@ export class RoomComponent implements OnInit, OnDestroy {
 
   goStop(){
     //implements stop streaming and destroy websocket
+    this.PeerRef.close()
+    this.PeerRef = null
+    this.roomService.stopWS()
   }
 
   startWebCamAndInitWS = async () => {
@@ -197,6 +204,18 @@ export class RoomComponent implements OnInit, OnDestroy {
     // if (this.PeerRef.localDescription){
       this.PeerRef.addIceCandidate(new RTCIceCandidate(ICE))
     // }
+  }
+
+  handlePeerDisconnect = ()=>{
+    this.PeerRef.close()
+    this.PeerRef = null
+      this.peerAsync = new Promise((resolve,_)=>{
+        let peer:LoginResponse = {
+          User:{ID:"",Name:"peer disconnected",Gender:""}
+        }
+        resolve(peer)
+      })
+      console.log("peer disconnected")
   }
 
 }

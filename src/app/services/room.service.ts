@@ -19,6 +19,7 @@ export class RoomService {
     createdRoomEvent:EventEmitter<string> = new EventEmitter<string>()
     answerFromServerEvent:EventEmitter<AnswerResponse> = new EventEmitter<AnswerResponse>()
     ICEFromServerEvent:EventEmitter<any> = new EventEmitter<any>()
+    peerDisconnectedEvent:EventEmitter<boolean> = new EventEmitter<boolean>()
     RoomID:string
 
     ws:WebSocket
@@ -37,6 +38,10 @@ export class RoomService {
 
     getICEFromServerEvent(){
         return this.ICEFromServerEvent
+    }
+
+    getPeerDisconnectedEvent(){
+        return this.peerDisconnectedEvent
     }
 
     initWS = (ID:string,Name:string,Gender:string) => {
@@ -78,6 +83,11 @@ export class RoomService {
                     case staticvar.AnswerFromServer:
                         this.answerFromServerEvent.emit(sdpRes)
                         break
+                    case staticvar.PeerDisconnected:
+                        this.peerDisconnectedEvent.emit(true)
+                        this.ws.close()
+                        this.ws = null
+                        break
                 }
             }
             return true
@@ -106,5 +116,12 @@ export class RoomService {
           ICE:ICE,
       }
       this.ws.send(JSON.stringify(payload))
-  }
+    }
+
+    stopWS = ()=>{
+        this.ws.close()
+        this.ws = null
+    }
+
+  
 }

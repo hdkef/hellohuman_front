@@ -7,4 +7,5 @@ export const staticvar = {
 	AnswerFromServer      : "AnswerFromServer",
 	ICEFromClient         : "ICEFromClient",
 	ICEFromServer         : "ICEFromServer",
+	PeerDisconnected	  : "PeerDisconnected",
 }
