@@ -29,19 +29,23 @@ export class ChatBoxComponent implements OnInit, OnDestroy {
 
   subscribeToChatBox = ()=>{
     this.roomSubs = this.store.select("room").subscribe((data)=>{
-      console.log(data)
       let chats = data["ChatBox"]
       if (chats){
         this.chats = new Promise((resolve,_)=>{
           resolve(chats)
         })
+        return setTimeout(()=>{this.scrollToBottom()},0) //respond scroll to bottom async because render is async
       }
     })
   }
 
   onChatTextEvent(Text){
-    console.log("onChatTextEvent")
     this.store.dispatch(new SendChat(Text))
+  }
+
+  scrollToBottom = ()=>{
+    var div = document.getElementById("chat-group");
+    div.scrollTop = div.scrollHeight;
   }
 
 }

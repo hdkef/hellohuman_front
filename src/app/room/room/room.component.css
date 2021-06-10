@@ -1,10 +1,6 @@
 
-#title p, #title h1{
+#title h1{
     margin:2px;
-}
-
-#title p{
-    margin-bottom: 5px;
 }
 
 #title {
@@ -25,7 +21,6 @@
 #btn-group button {
     background-color: wheat;
     display: block;
-    width: 64px;
     height: 32px;
     font-size: large;
     border: none;
@@ -41,7 +36,7 @@
 }
 
 .videocol video {
-    width:400px;
+    width:500px;
     padding: 0px;
     margin:0px;
 }

@@ -5,7 +5,6 @@
 <div id="container">
     <div id="title">
         <h1>hellohuman!</h1>
-        <p>interact with human race all over the world.</p>
     </div>
     <div class="center">
         <div id="videogrid">    
@@ -28,6 +27,8 @@
         <div id="btn-group" class="center">
             <button (click)="goLive()" *ngIf="statusNotStarted">start</button>
             <button (click)="goStop()" *ngIf="!statusNotStarted">stop</button>
+            <button (click)="changeMicState()" [ngStyle]="{'background-color':micState.color}">mic {{micState.status}}</button>
+            <button (click)="changeVidState()" [ngStyle]="{'background-color':vidState.color}">vid {{vidState.status}}</button>
         </div>
     </div>
 </div>

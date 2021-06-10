@@ -20,7 +20,6 @@ export class InputComponent implements OnInit {
   }
 
   sendChatText(){
-    console.log("emit sendChatText")
     this.chatTextEvent.emit(this.chatForm.value.Text)
     this.resetForm()
   }
