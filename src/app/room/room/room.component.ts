@@ -32,8 +32,8 @@ export class RoomComponent implements OnInit, OnDestroy {
   PeerRef:webkitRTCPeerConnection
   statusNotStarted:boolean = true
   canChat:boolean = false
-  micState = {status:"on",value:true,color:"wheat"}
-  vidState = {status:"on",value:true,color:"wheat"}
+  micState = {status:"on",value:true,color:"indianred"}
+  vidState = {status:"on",value:true,color:"indianred"}
 
   constructor(private store:Store<AppState>, private roomService:RoomEffect) { }
   
@@ -238,7 +238,7 @@ export class RoomComponent implements OnInit, OnDestroy {
     a.value = !a.value
     if (a.value){
       a.status = "on"
-      a.color = "wheat"
+      a.color = "indianred"
     }else{
       a.status = "off"
       a.color = "grey"
