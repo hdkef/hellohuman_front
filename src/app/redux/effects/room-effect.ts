@@ -121,6 +121,7 @@ export class RoomEffect {
             ofType(fromRoomAction.SEND_CHAT),
             withLatestFrom(this.store.select("auth"),this.store.select("room")),
             map((value)=>{
+                console.log("sendChat")
                 let action:fromRoomAction.SendChat = value[0]
                 let auth = value[1]
                 let room = value[2]
@@ -192,9 +193,11 @@ export class RoomEffect {
                         this.ws = null
                         break
                     case staticvar.ChatFromMe:
+                        console.log("chatfromme")
                         this.store.dispatch(new fromRoomAction.InsertUserChat(chat))
                         break
                     case staticvar.ChatFromPeer:
+                        console.log("chatfrompeer")
                         this.store.dispatch(new fromRoomAction.InsertPeerChat(chat))
                         break
                 }

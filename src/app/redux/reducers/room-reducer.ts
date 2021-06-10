@@ -40,7 +40,7 @@ export function roomReducer (
                 let newChatBox = [action.payload]
                 return {...state,ChatBox:newChatBox}
             }else{
-                let newChatBox = [action.payload,...oldChatBox]
+                let newChatBox = [...oldChatBox,action.payload]
                 return {...state,ChatBox:newChatBox}
             }
         case fromRoomAction.INSERT_USER_CHAT:
@@ -48,7 +48,7 @@ export function roomReducer (
                 let newChatBox = [action.payload]
                 return {...state,ChatBox:newChatBox}
             }else{
-                let newChatBox = [action.payload,...oldChatBox]
+                let newChatBox = [...oldChatBox,action.payload]
                 return {...state,ChatBox:newChatBox}
             }
         case fromRoomAction.DESTROY_ROOM:

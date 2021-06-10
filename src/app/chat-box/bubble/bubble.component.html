@@ -1,1 +1,4 @@
-<p>bubble works!</p>
+<div class="bubble-chat">
+    <p><span style="background-color: wheat;">{{(chatAsync | async)?.Name}}</span></p>
+    <p>{{(chatAsync | async)?.Text}}</p>
+</div>

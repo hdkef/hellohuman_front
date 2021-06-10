@@ -20,7 +20,9 @@
         </div>
     </div>
     <div class="center">
-        <app-chat-box></app-chat-box>
+        <div id="appchatbox" *ngIf="canChat">
+            <app-chat-box></app-chat-box>
+        </div>
     </div>
     <div class="center">
         <div id="btn-group" class="center">

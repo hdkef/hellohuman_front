@@ -1,2 +1,8 @@
-<app-bubble></app-bubble>
-<app-input (chatTextEvent)="onChatTextEvent"></app-input>
+<div class="center">
+    <div id="chat-group">
+        <app-bubble *ngFor="let chat of chats | async" [chat]="chat"></app-bubble>
+    </div>
+</div>
+<div id="chat-input">
+    <app-input (chatTextEvent)="onChatTextEvent($event)"></app-input>
+</div>
