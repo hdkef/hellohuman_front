@@ -5,12 +5,12 @@
     width:100%;
 }
 
-#title h1{
-    margin:2px;
+#title img{
+    width:25px;
 }
 
 #title {
-    width:100%;
+    margin-top: 15px;
     text-align: center;
 }
 

@@ -18,8 +18,11 @@
     margin-bottom: 25px;
 }
 
+#title img{
+    width:50px;
+}
+
 #title {
-    width:100%;
     text-align: center;
 }
 
