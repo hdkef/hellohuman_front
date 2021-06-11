@@ -8,10 +8,11 @@
 
 #title img{
     width:25px;
+    cursor: pointer;
 }
 
 #title {
-    margin-top: 15px;
+    padding-top: 15px;
     text-align: center;
 }
 

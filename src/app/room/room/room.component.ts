@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 import { AnswerResponse, LoginResponse, RoomResponse } from 'src/app/models/response';
@@ -35,7 +36,7 @@ export class RoomComponent implements OnInit, OnDestroy {
   micState = {status:"on",value:true,color:"indianred"}
   vidState = {status:"on",value:true,color:"indianred"}
 
-  constructor(private store:Store<AppState>, private roomService:RoomEffect) { }
+  constructor(private store:Store<AppState>, private roomService:RoomEffect, private router:Router) { }
   
   
   ngOnDestroy(): void {
@@ -251,6 +252,10 @@ export class RoomComponent implements OnInit, OnDestroy {
 
   toggleMuteVid = ()=>{
     this.localStream.getVideoTracks().forEach((track)=>{track.enabled = !track.enabled})
+  }
+
+  goAbout(){
+    this.router.navigateByUrl("/about")
   }
 
 }
