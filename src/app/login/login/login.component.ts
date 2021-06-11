@@ -24,10 +24,20 @@ export class LoginComponent implements OnInit {
   }
 
   goLogin(){
-    let payload:LoginPayload = {
-      User:{Name:this.loginForm.value.Name,Gender:this.loginForm.value.Gender}
+    if (this.checkUserDevice()){
+      let payload:LoginPayload = {
+        User:{Name:this.loginForm.value.Name,Gender:this.loginForm.value.Gender}
+      }
+      this.store.dispatch(new LoginStart(payload))
     }
-    this.store.dispatch(new LoginStart(payload))
+  }
+
+  checkUserDevice = ()=>{
+    if (window.innerWidth <= 1100  && window.innerHeight <= 900){
+      alert("this web app is made for desktop. Please return.")
+      return false
+    }
+    return true
   }
 
 }
